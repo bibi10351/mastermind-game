@@ -170,3 +170,33 @@ button:disabled {
     background-color: var(--success-color);
     color: white;
 }
+
+@media (max-width: 600px) {
+    body {
+        padding: 10px;
+    }
+
+    .container {
+        padding: 1.5rem;
+    }
+
+    h1 {
+        font-size: 1.75rem;
+    }
+
+    .input-section {
+        flex-direction: column;
+    }
+
+    button {
+        width: 100%;
+    }
+
+    .history-item {
+        padding: 0.5rem;
+    }
+
+    .guess-val {
+        font-size: 1.1rem;
+    }
+}

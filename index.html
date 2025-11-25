@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
     <div class="container">
         <header>
@@ -18,7 +20,8 @@
             <div id="game-status" class="status-message">遊戲開始！請輸入你的猜測。</div>
 
             <div class="input-section">
-                <input type="text" id="guess-input" maxlength="4" placeholder="輸入 4 位數字" autocomplete="off">
+                <input type="text" id="guess-input" maxlength="4" placeholder="輸入 4 位數字" autocomplete="off"
+                    inputmode="numeric">
                 <button id="submit-btn">猜測</button>
                 <button id="restart-btn" class="hidden">重新開始</button>
             </div>
@@ -33,4 +36,5 @@
     </div>
     <script src="script.js"></script>
 </body>
+
 </html>
