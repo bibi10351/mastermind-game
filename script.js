@@ -3,16 +3,21 @@
  */
 
 // Game State
-const GAME_VERSION = 'v1.1.0';
+const GAME_VERSION = 'v1.2.0';
 let secretAnswer = "";
 let isGameOver = false;
+let historyData = []; // Store guess history for persistence
 
-// Update Title with Version
-document.title = `Mastermind 終極密碼 (${GAME_VERSION})`;
+// Update Main Title with Version
+const mainTitle = document.querySelector('h1');
+if (mainTitle) {
+    mainTitle.innerHTML += ` <span style="font-size: 0.5rem; vertical-align: middle; opacity: 0.7;">(${GAME_VERSION})</span>`;
+}
 
 // DOM Elements
 const guessInput = document.getElementById('guess-input');
 const submitBtn = document.getElementById('submit-btn');
+const newGameBtn = document.getElementById('new-game-btn');
 const restartBtn = document.getElementById('restart-btn');
 const historyList = document.getElementById('history-list');
 const gameStatus = document.getElementById('game-status');
@@ -26,42 +31,28 @@ function generateAnswer() {
     let answer = "";
 
     // Shuffle and pick first 4
-    // Fisher-Yates Shuffle for better randomness
     for (let i = digits.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [digits[i], digits[j]] = [digits[j], digits[i]];
     }
 
     answer = digits.slice(0, 4).join('');
-    console.log("Secret Answer (Debug):", answer); // For debugging purposes
+    console.log("Secret Answer (Debug):", answer);
     return answer;
 }
 
 /**
  * Compares the user's guess with the secret answer.
- * @param {string} guess - The user's 4-digit guess.
- * @param {string} answer - The secret 4-digit answer.
- * @returns {object} An object containing the count of A and B.
- *                   { A: number, B: number }
- *                   A: Correct number and correct position.
- *                   B: Correct number but wrong position.
  */
 function checkGuess(guess, answer) {
     let countA = 0;
     let countB = 0;
 
-    // First pass: Check for A (Correct position and value)
     for (let i = 0; i < 4; i++) {
         if (guess[i] === answer[i]) {
             countA++;
         }
     }
-
-    // Second pass: Check for B (Correct value but wrong position)
-    // We check if the digit exists in the answer, and it's NOT a direct match (A)
-    // However, for standard 1A2B with unique digits, we can simply count how many digits overlap
-    // and subtract A from that total to get B.
-    // Since digits are unique, if guess[i] is in answer, it's either A or B.
 
     let totalMatches = 0;
     for (let i = 0; i < 4; i++) {
@@ -71,41 +62,97 @@ function checkGuess(guess, answer) {
     }
 
     countB = totalMatches - countA;
-
     return { A: countA, B: countB };
 }
 
 /**
  * Validates the user input.
- * @param {string} guess - The user's input string.
- * @returns {object} { valid: boolean, message: string }
  */
 function isValid(guess) {
-    // Check length
-    if (guess.length !== 4) {
-        return { valid: false, message: "請輸入 4 位數字" };
-    }
-
-    // Check if numeric
-    if (!/^\d+$/.test(guess)) {
-        return { valid: false, message: "只能輸入數字" };
-    }
-
-    // Check for unique digits
+    if (guess.length !== 4) return { valid: false, message: "請輸入 4 位數字" };
+    if (!/^\d+$/.test(guess)) return { valid: false, message: "只能輸入數字" };
     const uniqueDigits = new Set(guess);
-    if (uniqueDigits.size !== 4) {
-        return { valid: false, message: "數字不能重複" };
-    }
-
+    if (uniqueDigits.size !== 4) return { valid: false, message: "數字不能重複" };
     return { valid: true, message: "" };
 }
 
 /**
- * Handles the game initialization.
+ * Saves current game state to LocalStorage.
  */
-function initGame() {
+function saveState() {
+    const state = {
+        secretAnswer: secretAnswer,
+        isGameOver: isGameOver,
+        historyData: historyData
+    };
+    localStorage.setItem('mastermind_save', JSON.stringify(state));
+}
+
+/**
+ * Loads game state from LocalStorage.
+ * @returns {boolean} True if state was loaded successfully.
+ */
+function loadState() {
+    const savedState = localStorage.getItem('mastermind_save');
+    if (!savedState) return false;
+
+    try {
+        const state = JSON.parse(savedState);
+        secretAnswer = state.secretAnswer;
+        isGameOver = state.isGameOver;
+        historyData = state.historyData || [];
+
+        // Restore UI - render history
+        historyList.innerHTML = "";
+        historyData.forEach(item => {
+            addHistoryItem(item.guess, item.result);
+        });
+
+        // Restore game state UI
+        if (isGameOver) {
+            guessInput.disabled = true;
+            submitBtn.disabled = true;
+            restartBtn.classList.remove('hidden');
+
+            if (historyData.length > 0 && historyData[historyData.length - 1].result.A === 4) {
+                gameStatus.textContent = `恭喜！你猜對了！答案是 ${secretAnswer}`;
+                gameStatus.className = "status-message win";
+            } else {
+                gameStatus.textContent = "遊戲結束";
+                gameStatus.className = "status-message";
+            }
+        } else {
+            guessInput.disabled = false;
+            submitBtn.disabled = false;
+            restartBtn.classList.add('hidden');
+
+            if (historyData.length > 0) {
+                const last = historyData[historyData.length - 1];
+                gameStatus.textContent = `猜測結果：${last.result.A}A${last.result.B}B`;
+                gameStatus.className = "status-message";
+            } else {
+                gameStatus.textContent = "遊戲開始！請輸入你的猜測。";
+                gameStatus.className = "status-message";
+            }
+        }
+
+        console.log("Secret Answer (Restored):", secretAnswer);
+        return true;
+    } catch (e) {
+        console.error("Failed to load state:", e);
+        return false;
+    }
+}
+
+/**
+ * Resets the game - clears storage and initializes new game.
+ */
+function resetGame() {
+    localStorage.removeItem('mastermind_save');
     secretAnswer = generateAnswer();
     isGameOver = false;
+    historyData = [];
+
     guessInput.value = "";
     guessInput.disabled = false;
     submitBtn.disabled = false;
@@ -114,6 +161,17 @@ function initGame() {
     gameStatus.textContent = "遊戲開始！請輸入你的猜測。";
     gameStatus.className = "status-message";
     guessInput.focus();
+
+    saveState();
+}
+
+/**
+ * Initializes the application.
+ */
+function initialize() {
+    if (!loadState()) {
+        resetGame();
+    }
 }
 
 /**
@@ -128,16 +186,13 @@ function handleGuess() {
     if (!validation.valid) {
         gameStatus.textContent = validation.message;
         gameStatus.className = "status-message error";
-        return; // Stop execution if invalid
+        return;
     }
 
-    // Valid guess, proceed to check
     const result = checkGuess(guess, secretAnswer);
-
-    // Update History
+    historyData.push({ guess: guess, result: result });
     addHistoryItem(guess, result);
 
-    // Update Status
     if (result.A === 4) {
         gameStatus.textContent = `恭喜！你猜對了！答案是 ${secretAnswer}`;
         gameStatus.className = "status-message win";
@@ -147,13 +202,12 @@ function handleGuess() {
         gameStatus.className = "status-message";
         guessInput.value = "";
         guessInput.focus();
+        saveState();
     }
 }
 
 /**
  * Adds a history item to the list.
- * @param {string} guess 
- * @param {object} result 
  */
 function addHistoryItem(guess, result) {
     const item = document.createElement('div');
@@ -167,19 +221,18 @@ function addHistoryItem(guess, result) {
         <span class="${resultClass}">${result.A}A${result.B}B</span>
     `;
 
-    // Prepend to show latest at top
     historyList.prepend(item);
 }
 
 /**
  * Ends the game.
- * @param {boolean} win 
  */
 function endGame(win) {
     isGameOver = true;
     guessInput.disabled = true;
     submitBtn.disabled = true;
     restartBtn.classList.remove('hidden');
+    saveState();
 }
 
 // Event Listeners
@@ -191,7 +244,13 @@ guessInput.addEventListener('keypress', (e) => {
     }
 });
 
-restartBtn.addEventListener('click', initGame);
+newGameBtn.addEventListener('click', () => {
+    if (confirm('確定要放棄當前進度並重新開始嗎？')) {
+        resetGame();
+    }
+});
 
-// Start game on load
-initGame();
+restartBtn.addEventListener('click', resetGame);
+
+// Start
+initialize();

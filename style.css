@@ -122,6 +122,16 @@ button:disabled {
     cursor: not-allowed;
 }
 
+.secondary-btn {
+    background-color: white;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+}
+
+.secondary-btn:hover {
+    background-color: #e0e7ff;
+}
+
 .hidden {
     display: none;
 }
