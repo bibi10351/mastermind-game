@@ -18,7 +18,6 @@ if (mainTitle) {
 const guessInput = document.getElementById('guess-input');
 const submitBtn = document.getElementById('submit-btn');
 const newGameBtn = document.getElementById('new-game-btn');
-const restartBtn = document.getElementById('restart-btn');
 const historyList = document.getElementById('history-list');
 const gameStatus = document.getElementById('game-status');
 
@@ -112,7 +111,6 @@ function loadState() {
         if (isGameOver) {
             guessInput.disabled = true;
             submitBtn.disabled = true;
-            restartBtn.classList.remove('hidden');
 
             if (historyData.length > 0 && historyData[historyData.length - 1].result.A === 4) {
                 gameStatus.textContent = `恭喜！你猜對了！答案是 ${secretAnswer}`;
@@ -124,7 +122,6 @@ function loadState() {
         } else {
             guessInput.disabled = false;
             submitBtn.disabled = false;
-            restartBtn.classList.add('hidden');
 
             if (historyData.length > 0) {
                 const last = historyData[historyData.length - 1];
@@ -156,7 +153,6 @@ function resetGame() {
     guessInput.value = "";
     guessInput.disabled = false;
     submitBtn.disabled = false;
-    restartBtn.classList.add('hidden');
     historyList.innerHTML = "";
     gameStatus.textContent = "遊戲開始！請輸入你的猜測。";
     gameStatus.className = "status-message";
@@ -231,7 +227,6 @@ function endGame(win) {
     isGameOver = true;
     guessInput.disabled = true;
     submitBtn.disabled = true;
-    restartBtn.classList.remove('hidden');
     saveState();
 }
 
@@ -245,12 +240,10 @@ guessInput.addEventListener('keypress', (e) => {
 });
 
 newGameBtn.addEventListener('click', () => {
-    if (confirm('確定要放棄當前進度並重新開始嗎？')) {
+    if (confirm('確定要重新開始嗎？')) {
         resetGame();
     }
 });
-
-restartBtn.addEventListener('click', resetGame);
 
 // Start
 initialize();
