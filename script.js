@@ -3,8 +3,12 @@
  */
 
 // Game State
+const GAME_VERSION = 'v1.1.0';
 let secretAnswer = "";
 let isGameOver = false;
+
+// Update Title with Version
+document.title = `Mastermind 終極密碼 (${GAME_VERSION})`;
 
 // DOM Elements
 const guessInput = document.getElementById('guess-input');
@@ -20,14 +24,14 @@ const gameStatus = document.getElementById('game-status');
 function generateAnswer() {
     const digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
     let answer = "";
-    
+
     // Shuffle and pick first 4
     // Fisher-Yates Shuffle for better randomness
     for (let i = digits.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [digits[i], digits[j]] = [digits[j], digits[i]];
     }
-    
+
     answer = digits.slice(0, 4).join('');
     console.log("Secret Answer (Debug):", answer); // For debugging purposes
     return answer;
@@ -58,14 +62,14 @@ function checkGuess(guess, answer) {
     // However, for standard 1A2B with unique digits, we can simply count how many digits overlap
     // and subtract A from that total to get B.
     // Since digits are unique, if guess[i] is in answer, it's either A or B.
-    
+
     let totalMatches = 0;
     for (let i = 0; i < 4; i++) {
         if (answer.includes(guess[i])) {
             totalMatches++;
         }
     }
-    
+
     countB = totalMatches - countA;
 
     return { A: countA, B: countB };
@@ -81,18 +85,18 @@ function isValid(guess) {
     if (guess.length !== 4) {
         return { valid: false, message: "請輸入 4 位數字" };
     }
-    
+
     // Check if numeric
     if (!/^\d+$/.test(guess)) {
         return { valid: false, message: "只能輸入數字" };
     }
-    
+
     // Check for unique digits
     const uniqueDigits = new Set(guess);
     if (uniqueDigits.size !== 4) {
         return { valid: false, message: "數字不能重複" };
     }
-    
+
     return { valid: true, message: "" };
 }
 
@@ -129,10 +133,10 @@ function handleGuess() {
 
     // Valid guess, proceed to check
     const result = checkGuess(guess, secretAnswer);
-    
+
     // Update History
     addHistoryItem(guess, result);
-    
+
     // Update Status
     if (result.A === 4) {
         gameStatus.textContent = `恭喜！你猜對了！答案是 ${secretAnswer}`;
@@ -154,15 +158,15 @@ function handleGuess() {
 function addHistoryItem(guess, result) {
     const item = document.createElement('div');
     item.className = 'history-item';
-    
+
     const isWin = result.A === 4;
     const resultClass = isWin ? 'result-val correct' : 'result-val';
-    
+
     item.innerHTML = `
         <span class="guess-val">${guess}</span>
         <span class="${resultClass}">${result.A}A${result.B}B</span>
     `;
-    
+
     // Prepend to show latest at top
     historyList.prepend(item);
 }
